@@ -2,8 +2,7 @@
 const https = require('https');
 const LOL_DEV_KEY = require('./api_key.js');
 
-const region = 'na1';
-let username = 'thegnardogg';
+
 
 let options = {
   headers:{
@@ -11,8 +10,34 @@ let options = {
   }
 }
 
-const getUserSummonerData = (username, region = 'na1') => {
-  https.get(`https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/${username}`, options, (res) => {
+const getSummonerID = (username, region, cb) => {
+  console.log('getting summonerID')
+  https.get(`https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${username}`, options, (res) => {
+    let data = '';
+
+    res.on('data', (chunk) => {
+      //console.log('returning data')
+      data += chunk;
+    });
+
+    res.on('end', () => {
+      //console.log('returning data')
+      let result = JSON.parse(data);
+      cb(null, result);
+    });
+
+  }).on("error", (err) => {
+    //console.log("Error: " + err.message);
+    cb(err, null);
+  });
+
+}
+
+const getSummonerMatchHistory = (summonerID, region = 'na1') => {
+
+  let url = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-account/${summonerID}`;
+
+  https.get(url, options, (res) => {
     let data = '';
 
     res.on('data', (chunk) => {
@@ -20,7 +45,7 @@ const getUserSummonerData = (username, region = 'na1') => {
     });
 
     res.on('end', () => {
-      console.log(JSON.parse(data));
+      return JSON.parse(data);
     });
 
   }).on("error", (err) => {
@@ -28,4 +53,7 @@ const getUserSummonerData = (username, region = 'na1') => {
   });
 }
 
-getUserSummonerData('thegnardogg');
+module.exports = {
+  getSummonerID,
+  getSummonerMatchHistory,
+}
