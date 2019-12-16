@@ -33,7 +33,7 @@ const getSummonerID = (username, region, cb) => {
 
 }
 
-const getSummonerMatchHistory = (summonerID, region = 'na1') => {
+const getSummonerMatchHistory = (summonerID, region, cb) => {
 
   let url = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-account/${summonerID}`;
 
@@ -45,15 +45,39 @@ const getSummonerMatchHistory = (summonerID, region = 'na1') => {
     });
 
     res.on('end', () => {
-      return JSON.parse(data);
+      let result = JSON.parse(data);
+      cb(null, result);
     });
 
   }).on("error", (err) => {
-    console.log("Error: " + err.message);
+    cb(err, null);
   });
 }
+
+const getMatchInfo = (matchId, region, cb) => {
+  let url = `https://${region}.api.riotgames.com/lol/match/v4/matches/${matchId}`;
+
+  https.get(url, options, (res) => {
+    let data = '';
+
+    res.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    res.on('end', () => {
+      let result = JSON.parse(data);
+      cb(null, result);
+    });
+
+  }).on("error", (err) => {
+    cb(err, null);
+  });
+}
+
+
 
 module.exports = {
   getSummonerID,
   getSummonerMatchHistory,
+  getMatchInfo,
 }
