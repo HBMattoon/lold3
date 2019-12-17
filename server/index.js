@@ -21,10 +21,45 @@ app.get('/api/playername',(req, res) => {
   .then(output => {
     summonerMatchHistory(output.accountId, location)
     .then(matchHist => {
-      //console.log(matchHist)
-      matchInfo(matchHist.matches[0].gameId, location)
-      .then(matchData => console.log(matchData.participantIdentities))
-      .catch(err => console.log('err gettting match data: ', err))
+        ////TODO put in own function
+      console.log('matchHist :',matchHist);
+      let package = {data:[]}
+
+      let slowMatchInfo = (data, cb) => {
+        setTimeout(()=>{
+          console.log('getting match info')
+          matchInfo(data, location)
+          .then(matchData => {
+            //console.log('matchdata: ',matchData)
+            package.data.push(matchData)
+            cb(null, matchData)
+          })
+          .catch(err => {
+            console.log('err getting match data: ', err);
+            cb(err, null)
+          })
+        }, 1500);
+      }
+      slowMatchInfo = Promise.promisify(slowMatchInfo)
+
+      let recursiveGetMatchInfo = (arr) => {
+        let arrData = arr.shift()
+        console.log('game id is: ',arrData.gameId)
+        slowMatchInfo(arrData.gameId)
+        .then(()=> {
+          if(arr.length > 0){
+            console.log(arr.length, ' entries left!');
+            recursiveGetMatchInfo(arr);
+          } else {
+            console.log('done!')
+            console.log(package);
+          }
+        })
+        .catch(()=>console.log('err in slowMatchInfo: ', err))
+      }
+
+      recursiveGetMatchInfo(matchHist.matches)
+      ///put above in own function
 
 
     })
