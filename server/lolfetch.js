@@ -1,6 +1,7 @@
 
 const https = require('https');
 const LOL_DEV_KEY = require('./api_key.js');
+var Promise = require("bluebird");
 
 
 
@@ -75,9 +76,58 @@ const getMatchInfo = (matchId, region, cb) => {
 }
 
 
+const matchInfo = Promise.promisify(getMatchInfo);
+
+const slowMatchInfo = (gameId, location ,cb) => {
+  setTimeout(()=>{
+    matchInfo(gameId, location)
+    .then(matchData => cb(null, matchData))
+    .catch(err => cb(err, null))
+  }, 1500);
+}
+
+
+const promisedSlowMatchInfo = Promise.promisify(slowMatchInfo)
+
+let recursiveGetMatchInfo = (arr, location, package, cb) => {
+  if (arr.length === 0) {
+    cb(null, package)
+  }
+  let arrData = arr.shift();
+  promisedSlowMatchInfo(arrData.gameId, location)
+  .then(matchData => {
+    package.push(matchData)
+    if(arr.length > 90){
+      console.log(arr.length, '% left')
+      recursiveGetMatchInfo(arr, location, package, cb);
+    } else {
+      console.log('returning package')
+      cb(null, package)
+    }
+  })
+  .catch(err => cb(err, null))
+}
+
+const promisedRecursiveGetMatchInfo = Promise.promisify(recursiveGetMatchInfo);
+
+const getMatchHistory = (matchHist, location, cb) => {
+  promisedRecursiveGetMatchInfo(matchHist, location, [], cb)
+  .then(results => {
+    console.log('results are in!!!!!')
+    cb(null, results)
+  })
+  .catch(err => {
+    console.log('you messed up somewhere');
+    cb(err, null);
+  })
+}
+
+
+
 
 module.exports = {
   getSummonerID,
   getSummonerMatchHistory,
   getMatchInfo,
+  getMatchHistory
 }
