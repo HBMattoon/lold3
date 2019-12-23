@@ -51,7 +51,41 @@ class App extends React.Component {
     let bars = this.getData();
     //console.log(bars)
     this.setState({bars: bars})
+    this.getUserData('thegnardogg')
   }
+
+  getUserData(userName){
+    fetch(`/api/playername?name=${userName}`)
+    .then(data => data.json())
+    .then(data => {
+      let userStats = data.map(match => this.getParticipantData(userName, match))
+      console.log(userStats);
+    })
+  }
+
+  getParticipantData(userName, match){
+    let participantNumber = NaN;
+    let pIds = match.participantIdentities;
+    for(let i = 0; i < pIds.length; i++){
+      if(userName.toLowerCase() === pIds[i].player.summonerName.toLowerCase()){
+        participantNumber = pIds[i].participantId
+      }
+    }
+
+    if(participantNumber > 0 && participantNumber <= 10){
+      let result = {};
+      for(let i = 0; i < match.participants.length; i++){
+        if(match.participants[i].participantId === participantNumber){
+          result = match.participants[i];
+          result.fullTeamStats = (result.teamId === 200 ? match.teams[1] : match.teams[0]);
+          return result;
+        }
+      }
+    } else {
+      console.log('player not found in match');
+    }
+  }
+
 
   render(){
     return (
