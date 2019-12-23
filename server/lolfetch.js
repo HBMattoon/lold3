@@ -83,7 +83,7 @@ const slowMatchInfo = (gameId, location ,cb) => {
     matchInfo(gameId, location)
     .then(matchData => cb(null, matchData))
     .catch(err => cb(err, null))
-  }, 1500);
+  }, 1250);
 }
 
 
@@ -97,11 +97,10 @@ let recursiveGetMatchInfo = (arr, location, package, cb) => {
   promisedSlowMatchInfo(arrData.gameId, location)
   .then(matchData => {
     package.push(matchData)
-    if(arr.length > 90){
+    if(arr.length > 50){
       console.log(arr.length, '% left')
       recursiveGetMatchInfo(arr, location, package, cb);
     } else {
-      console.log('returning package')
       cb(null, package)
     }
   })
@@ -112,14 +111,8 @@ const promisedRecursiveGetMatchInfo = Promise.promisify(recursiveGetMatchInfo);
 
 const getMatchHistory = (matchHist, location, cb) => {
   promisedRecursiveGetMatchInfo(matchHist, location, [], cb)
-  .then(results => {
-    console.log('results are in!!!!!')
-    cb(null, results)
-  })
-  .catch(err => {
-    console.log('you messed up somewhere');
-    cb(err, null);
-  })
+  .then(results =>  cb(null, results))
+  .catch(err => cb(err, null));
 }
 
 

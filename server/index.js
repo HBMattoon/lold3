@@ -16,14 +16,21 @@ const location = 'na1';
 app.use('/',express.static(path.join(__dirname, '../client/dist')))
 
 app.get('/api/playername',(req, res) => {
-  console.log('testmade');
+  //console.log('testmade');
   let username = req.query.name;
   summonerID(username, location)
   .then(output => summonerMatchHistory(output.accountId, location))
   .then(matchHist => matchHistory(matchHist.matches, location))
-  .then(finalResults => console.log(finalResults))
-  .catch(err => console.log('err in summonerID: ', err))
-  res.end();
+  .then(finalResults => {
+    console.log('returning data')
+    let data = JSON.stringify(finalResults);
+    res.status(200).send(data);
+  })
+  .catch(err => {
+    console.log('err in summonerID: ', err)
+    res.status(500).end();
+  })
+
 });
 
 app.listen(port,()=> console.log('listening to port: ', port))
