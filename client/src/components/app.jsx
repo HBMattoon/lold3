@@ -89,7 +89,8 @@ class App extends React.Component {
   }
 
   getUserData(userName){
-    fetch(`/api/playername?name=${userName}`)
+    //fetch(`/api/userhist?name=${userName}`)
+    fetch(`/api/userhistdev`)
     .then(data => data.json())
     .then(data => {
       let userStats = data.map(match => this.getParticipantData(userName, match))
