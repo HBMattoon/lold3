@@ -3,6 +3,7 @@ const https = require('https');
 const LOL_DEV_KEY = require('./api_key.js');
 var Promise = require("bluebird");
 
+const returnCount = 50; //how many out of 100 entries to return
 
 
 let options = {
@@ -12,23 +13,19 @@ let options = {
 }
 
 const getSummonerID = (username, region, cb) => {
-  console.log('getting summonerID')
   https.get(`https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${username}`, options, (res) => {
     let data = '';
 
     res.on('data', (chunk) => {
-      //console.log('returning data')
       data += chunk;
     });
 
     res.on('end', () => {
-      //console.log('returning data')
       let result = JSON.parse(data);
       cb(null, result);
     });
 
   }).on("error", (err) => {
-    //console.log("Error: " + err.message);
     cb(err, null);
   });
 
@@ -97,7 +94,7 @@ let recursiveGetMatchInfo = (arr, location, package, cb) => {
   promisedSlowMatchInfo(arrData.gameId, location)
   .then(matchData => {
     package.push(matchData)
-    if(arr.length > 50){
+    if(arr.length > (100 - returnCount)){
       console.log(arr.length, '% left')
       recursiveGetMatchInfo(arr, location, package, cb);
     } else {
@@ -115,12 +112,25 @@ const getMatchHistory = (matchHist, location, cb) => {
   .catch(err => cb(err, null));
 }
 
+const summonerID = Promise.promisify(getSummonerID);
+const summonerMatchHistory = Promise.promisify(getSummonerMatchHistory);
+const matchHistory = Promise.promisify(getMatchHistory);
+
+const getSummonerMatchHistoryList = (username, location, cb) => {
+  summonerID(username, location)
+  .then(output => summonerMatchHistory(output.accountId, location))
+  .then(matchHist => matchHistory(matchHist.matches, location))
+  .then(finalResults => {
+    cb(null, finalResults);
+  })
+  .catch(err => {
+    cb(err, null);
+  })
+}
+
 
 
 
 module.exports = {
-  getSummonerID,
-  getSummonerMatchHistory,
-  getMatchInfo,
-  getMatchHistory
+  getSummonerMatchHistoryList
 }
